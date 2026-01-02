@@ -1,0 +1,86 @@
+"""
+Configuration file - System parameters and LLM settings
+
+IMPORTANT:
+1. Copy this file to config.py
+2. Configure your settings below
+3. Never commit config.py to version control (it contains your API key)
+"""
+
+# ============================================================================
+# LLM Configuration
+# ============================================================================
+
+# OpenAI API Key (required)
+# Get your key from: https://platform.openai.com/api-keys
+OPENAI_API_KEY = "your-api-key-here"
+
+# Custom OpenAI Base URL (optional)
+# Set to None to use default OpenAI endpoint
+# Examples:
+#   - Qwen/Alibaba: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+#   - Azure OpenAI: "https://YOUR-RESOURCE.openai.azure.com/openai/deployments/YOUR-DEPLOYMENT"
+#   - Local server: "http://localhost:8000/v1"
+#   - OpenAI (default): None
+OPENAI_BASE_URL = None
+
+# LLM Model name
+# Examples: "gpt-4o-mini", "gpt-4o", "qwen3-max", "qwen-plus-2025-07-28"
+LLM_MODEL = "gpt-4o-mini"
+
+# Embedding model (local, no API needed)
+EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
+
+# ============================================================================
+# Advanced LLM Features
+# ============================================================================
+
+# Enable deep thinking mode (for Qwen and compatible models)
+# Adds extra_body={"enable_thinking": True} to API calls
+# Set to False for OpenAI models (they don't support this)
+ENABLE_THINKING = False
+
+# Enable streaming responses (outputs content as it's generated)
+USE_STREAMING = False
+
+# Enable JSON format mode (ensures LLM outputs valid JSON)
+# Adds response_format={"type": "json_object"} to API calls
+# Helps prevent parsing failures from extra text like ```json
+USE_JSON_FORMAT = True
+
+
+# ============================================================================
+# Memory Building Parameters
+# ============================================================================
+
+# Number of dialogues per window
+WINDOW_SIZE = 10
+
+# Window overlap size (for context continuity)
+OVERLAP_SIZE = 2
+
+
+# ============================================================================
+# Retrieval Parameters
+# ============================================================================
+
+# Max entries returned by semantic search (vector similarity)
+SEMANTIC_TOP_K = 5
+
+# Max entries returned by keyword search (BM25 matching)
+KEYWORD_TOP_K = 3
+
+# Max entries returned by structured search (metadata filtering)
+STRUCTURED_TOP_K = 10
+
+
+# ============================================================================
+# Database Configuration
+# ============================================================================
+
+# Path to LanceDB storage
+LANCEDB_PATH = "./lancedb_data"
+
+# Memory table name
+MEMORY_TABLE_NAME = "memory_entries"
