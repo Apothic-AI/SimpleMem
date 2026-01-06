@@ -9,10 +9,8 @@
 
 [![Paper](https://img.shields.io/badge/📄_Paper-arXiv-b31b1b?style=for-the-badge)](https://arxiv.org)
 [![GitHub](https://img.shields.io/badge/💻_GitHub-SimpleMem-181717?logo=github&style=for-the-badge)](https://github.com/aiming-lab/SimpleMem)
+[![Project Page](https://img.shields.io/badge/🌐_Project_Page-blue?style=for-the-badge)](https://aiming-lab.github.io/SimpleMem-Page)
 [![License](https://img.shields.io/badge/📜_License-MIT-green?style=for-the-badge)](LICENSE)
-[![Python](https://img.shields.io/badge/🐍_Python-3.8+-blue.svg?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/downloads/)
-
-
 
 </div>
 
