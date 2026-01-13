@@ -32,6 +32,7 @@
 - [🚀 Performance Highlights](#-performance-highlights)
 - [📦 Installation](#-installation)
 - [⚡ Quick Start](#-quick-start)
+- [🔌 MCP Server](#-mcp-server)
 - [📊 Evaluation](#-evaluation)
 - [📁 File Structure](#-file-structure)
 - [📝 Citation](#-citation)
@@ -284,6 +285,39 @@ system = SimpleMemSystem(
 
 ---
 
+## 🔌 MCP Server
+
+SimpleMem is available as a **cloud-hosted memory service** via the Model Context Protocol (MCP), enabling seamless integration with AI assistants like Claude Desktop, Cursor, and other MCP-compatible clients.
+
+**🌐 Cloud Service**: [mcp.simplemem.cloud](https://mcp.simplemem.cloud)
+
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Streamable HTTP** | MCP 2025-03-26 protocol with JSON-RPC 2.0 |
+| **Multi-tenant Isolation** | Per-user data tables with token authentication |
+| **Hybrid Retrieval** | Semantic search + keyword matching + metadata filtering |
+| **Production Optimized** | Faster response times with OpenRouter integration |
+
+### Quick Configuration
+
+```json
+{
+  "mcpServers": {
+    "simplemem": {
+      "url": "https://mcp.simplemem.cloud/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_TOKEN"
+      }
+    }
+  }
+}
+```
+
+> 📖 For detailed setup instructions and self-hosting guide, see [MCP Documentation](MCP/README.md)
+
+---
 
 ## 📊 Evaluation
 
