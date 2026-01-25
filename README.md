@@ -211,7 +211,12 @@ $$k_{dyn} = \lfloor k_{base} \cdot (1 + \delta \cdot C_q) \rfloor$$
 ---
 
 ## 📦 Installation
+### 📝 Notes for First-Time Users
 
+- Ensure you are using **Python 3.10 in your active environment**, not just installed globally.
+- An OpenAI-compatible API key must be configured **before running any memory construction or retrieval**, otherwise initialization may fail.
+- When using non-OpenAI providers (e.g., Qwen or Azure OpenAI), verify both the model name and `OPENAI_BASE_URL` in `config.py`.
+- For large dialogue datasets, enabling parallel processing can significantly reduce memory construction time.
 ### 📋 Requirements
 - 🐍 Python 3.10
 - 🔑 OpenAI-compatible API (OpenAI, Qwen, Azure OpenAI, etc.)
