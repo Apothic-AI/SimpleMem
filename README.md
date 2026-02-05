@@ -1,11 +1,12 @@
-# SimpleMem: Efficient Lifelong Memory for LLM Agents
-
 <div align="center">
 
-<p align="center">
-  <img src="fig/Fig_icon.png" width="70%">
-</p>
+<img alt="simplemem_logo" src="https://github.com/user-attachments/assets/6ea54ad1-e007-442c-99d7-1174b10d1fec" width="450">
 
+<div align="center">
+  
+## Efficient Lifelong Memory for LLM Agents
+
+</div>
 
 [![Project Page](https://img.shields.io/badge/🎬_INTERACTIVE_DEMO-Visit_Our_Website-FF6B6B?style=for-the-badge&labelColor=FF6B6B&color=4ECDC4&logoColor=white)](https://aiming-lab.github.io/SimpleMem-Page)
 
@@ -14,8 +15,6 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
 
 </div>
-
----
 
 ## 🔥 News
 - **[01/20/2026]** **SimpleMem is now available on PyPI!** 📦 You can now install SimpleMem directly via `pip install simplemem` for easier setup and integration. [View Package Usage Guide →](docs/PACKAGE_USAGE.md)
