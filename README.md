@@ -3,34 +3,126 @@
 <img alt="simplemem_logo" src="https://github.com/user-attachments/assets/6ea54ad1-e007-442c-99d7-1174b10d1fec" width="450">
 
 <div align="center">
-  
+
 ## Efficient Lifelong Memory for LLM Agents
 
+<small>Store, compress, and retrieve long-term memories with semantic lossless compression. Works across Claude, Cursor, LM Studio, and more.</small>
+
 </div>
+
+<p><b>Works with any AI platform that supports MCP or Python integration</b></p>
+
+<table>
+<tr>
+
+<td align="center" width="100">
+  <a href="https://www.anthropic.com/claude">
+    <img src="https://cdn.simpleicons.org/claude/D97757" width="48" height="48" alt="Claude Desktop" />
+  </a><br/>
+  <sub>
+    <a href="https://www.anthropic.com/claude"><b>Claude Desktop</b></a>
+  </sub>
+</td>
+
+<td align="center" width="100">
+  <a href="https://cursor.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://cdn.simpleicons.org/cursor/FFFFFF">
+      <img src="https://cdn.simpleicons.org/cursor/000000" width="48" height="48" alt="Cursor" />
+    </picture>
+  </a><br/>
+  <sub>
+    <a href="https://cursor.com"><b>Cursor</b></a>
+  </sub>
+</td>
+
+<td align="center" width="100">
+  <a href="https://lmstudio.ai">
+    <img src="https://github.com/lmstudio-ai.png?size=200" width="48" height="48" alt="LM Studio" />
+  </a><br/>
+  <sub>
+    <a href="https://lmstudio.ai"><b>LM Studio</b></a>
+  </sub>
+</td>
+
+<td align="center" width="100">
+  <a href="https://cherry-ai.com">
+    <img src="https://github.com/CherryHQ.png?size=200" width="48" height="48" alt="Cherry Studio" />
+  </a><br/>
+  <sub>
+    <a href="https://cherry-ai.com"><b>Cherry Studio</b></a>
+  </sub>
+</td>
+
+<td align="center" width="100">
+  <a href="https://pypi.org/project/simplemem/">
+    <img src="https://cdn.simpleicons.org/pypi/3775A9" width="48" height="48" alt="PyPI" />
+  </a><br/>
+  <sub>
+    <a href="https://pypi.org/project/simplemem/"><b>PyPI Package</b></a>
+  </sub>
+</td>
+
+<td align="center" width="100">
+  <sub><b>+ Any MCP<br/>Client</b></sub>
+</td>
+
+</tr>
+</table>
+
+<div align="center">
+
+<br/>
+
+[🇨🇳 中文](./docs/i18n/README.zh-CN.md) •
+[🇯🇵 日本語](./docs/i18n/README.ja.md) •
+[🇰🇷 한국어](./docs/i18n/README.ko.md) •
+[🇪🇸 Español](./docs/i18n/README.es.md) •
+[🇫🇷 Français](./docs/i18n/README.fr.md) •
+[🇩🇪 Deutsch](./docs/i18n/README.de.md) •
+[🇧🇷 Português](./docs/i18n/README.pt-br.md)<br/>
+[🇷🇺 Русский](./docs/i18n/README.ru.md) •
+[🇸🇦 العربية](./docs/i18n/README.ar.md) •
+[🇮🇹 Italiano](./docs/i18n/README.it.md) •
+[🇻🇳 Tiếng Việt](./docs/i18n/README.vi.md) •
+[🇹🇷 Türkçe](./docs/i18n/README.tr.md)
+
+<br/>
 
 [![Project Page](https://img.shields.io/badge/🎬_INTERACTIVE_DEMO-Visit_Our_Website-FF6B6B?style=for-the-badge&labelColor=FF6B6B&color=4ECDC4&logoColor=white)](https://aiming-lab.github.io/SimpleMem-Page)
 
-[![arXiv](https://img.shields.io/badge/arXiv-2601.02553-b31b1b?style=flat&labelColor=555)](https://arxiv.org/abs/2601.02553)
-[![github](https://img.shields.io/badge/github-SimpleMem-181717?style=flat&labelColor=555&logo=github&logoColor=white)](https://github.com/aiming-lab/SimpleMem)
-[![license](https://img.shields.io/github/license/aiming-lab/SimpleMem?style=flat&label=license&labelColor=555&color=2EA44F)](LICENSE)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat&labelColor=555)](https://github.com/aiming-lab/SimpleMem/pulls)
+<p align="center">
+  <a href="https://arxiv.org/abs/2601.02553"><img src="https://img.shields.io/badge/arXiv-2601.02553-b31b1b?style=flat&labelColor=555" alt="arXiv"></a>
+  <a href="https://github.com/aiming-lab/SimpleMem"><img src="https://img.shields.io/badge/github-SimpleMem-181717?style=flat&labelColor=555&logo=github&logoColor=white" alt="GitHub"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/aiming-lab/SimpleMem?style=flat&label=license&labelColor=555&color=2EA44F" alt="License"></a>
+  <a href="https://github.com/aiming-lab/SimpleMem/pulls"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat&labelColor=555" alt="PRs Welcome"></a>
+  <br/>
+  <a href="https://pypi.org/project/simplemem/"><img src="https://img.shields.io/pypi/v/simplemem?style=flat&label=pypi&labelColor=555&color=3775A9&logo=pypi&logoColor=white" alt="PyPI"></a>
+  <a href="https://pypi.org/project/simplemem/"><img src="https://img.shields.io/pypi/pyversions/simplemem?style=flat&label=python&labelColor=555&color=3775A9&logo=python&logoColor=white" alt="Python"></a>
+  <a href="https://mcp.simplemem.cloud"><img src="https://img.shields.io/badge/MCP-mcp.simplemem.cloud-14B8A6?style=flat&labelColor=555" alt="MCP Server"></a>
+  <a href="https://github.com/aiming-lab/SimpleMem"><img src="https://img.shields.io/badge/Claude_Skills-supported-FFB000?style=flat&labelColor=555" alt="Claude Skills"></a>
+  <br/>
+  <a href="https://discord.gg/KA2zC32M"><img src="https://img.shields.io/badge/Discord-Join_Chat-5865F2?style=flat&labelColor=555&logo=discord&logoColor=white" alt="Discord"></a>
+  <a href="fig/wechat_logo3.JPG"><img src="https://img.shields.io/badge/WeChat-Group-07C160?style=flat&labelColor=555&logo=wechat&logoColor=white" alt="WeChat"></a>
+</p>
+
 <br/>
-[![pypi](https://img.shields.io/pypi/v/simplemem?style=flat&label=pypi&labelColor=555&color=3775A9&logo=pypi&logoColor=white)](https://pypi.org/project/simplemem/)
-[![python](https://img.shields.io/pypi/pyversions/simplemem?style=flat&label=python&labelColor=555&color=3775A9&logo=python&logoColor=white)](https://pypi.org/project/simplemem/)
-[![MCP Server](https://img.shields.io/badge/MCP-mcp.simplemem.cloud-14B8A6?style=flat&labelColor=555)](https://mcp.simplemem.cloud)
-[![Claude Skills](https://img.shields.io/badge/Claude_Skills-supported-FFB000?style=flat&labelColor=555)](https://github.com/aiming-lab/SimpleMem)
-<br/>
-[![Discord](https://img.shields.io/badge/Discord-Join_Chat-5865F2?style=flat&labelColor=555&logo=discord&logoColor=white)](https://discord.gg/KA2zC32M)
-[![WeChat](https://img.shields.io/badge/WeChat-Group-07C160?style=flat&labelColor=555&logo=wechat&logoColor=white)](fig/wechat_logo3.JPG)
+
+[Overview](#-overview) • [Quick Start](#-quick-start) • [MCP Server](#-mcp-server) • [Evaluation](#-evaluation) • [Citation](#-citation)
 
 </div>
 
+</div>
+
+<br/>
+
 ## 🔥 News
-- **[01/20/2026]** **SimpleMem is now available on PyPI!** 📦 You can now install SimpleMem directly via `pip install simplemem` for easier setup and integration. [View Package Usage Guide →](docs/PACKAGE_USAGE.md)
-- **[01/19/2026]** **Added Local Memory Storage for SimpleMem Skill!** 💾 SimpleMem Skill now supports local memory storage, enabling seamless memory retention and management directly within Claude Skills.
-- **[01/18/2026]** **SimpleMem now supports Claude Skills!** 🚀 Use SimpleMem in claude.ai to remember long-term information and project history across conversations. Register at [mcp.simplemem.cloud](https://mcp.simplemem.cloud), add the domain to Claude's network whitelist, **configure with your token in the skill file**, and import the skill!
-- **[01/14/2026]** **SimpleMem MCP Server is now LIVE and Open Source!** 🎉 Experience SimpleMem as a cloud-hosted memory service at [mcp.simplemem.cloud](https://mcp.simplemem.cloud). Easily integrate with your favorite chat platforms (LM Studio, Cherry Studio) and AI agents (Cursor, Claude Desktop) using the **Streamable HTTP** MCP protocol. The MCP implementation features production-ready optimizations including multi-tenant user isolation, faster response times, and enhanced security. [View MCP Documentation →](MCP/README.md)
-- **[01/08/2026]** We've set up a Discord server and WeChat group to make it easier to collaborate and exchange ideas on this project. Welcome to join the Group to share your thoughts, ask questions, or contribute your ideas! 🔥 Join our [Discord](https://discord.gg/KA2zC32M) and [WeChat Group](fig/wechat_logo3.JPG) Now!
+
+- **[01/20/2026]** **SimpleMem is now available on PyPI!** 📦 Install directly via `pip install simplemem`. [View Package Usage Guide →](docs/PACKAGE_USAGE.md)
+- **[01/19/2026]** **Added Local Memory Storage for SimpleMem Skill!** 💾 SimpleMem Skill now supports local memory storage within Claude Skills.
+- **[01/18/2026]** **SimpleMem now supports Claude Skills!** 🚀 Use SimpleMem in claude.ai for long-term memory across conversations. Register at [mcp.simplemem.cloud](https://mcp.simplemem.cloud), configure your token, and import the skill!
+- **[01/14/2026]** **SimpleMem MCP Server is now LIVE and Open Source!** 🎉 Cloud-hosted memory service at [mcp.simplemem.cloud](https://mcp.simplemem.cloud). Integrates with LM Studio, Cherry Studio, Cursor, Claude Desktop via **Streamable HTTP** MCP protocol. [View MCP Documentation →](MCP/README.md)
+- **[01/08/2026]** 🔥 Join our [Discord](https://discord.gg/KA2zC32M) and [WeChat Group](fig/wechat_logo3.JPG) to collaborate and exchange ideas!
 - **[01/05/2026]** SimpleMem paper was released on [arXiv](https://arxiv.org/abs/2601.02553)!
 
 ---
@@ -44,7 +136,6 @@
 - [⚡ Quick Start](#-quick-start)
 - [🔌 MCP Server](#-mcp-server)
 - [📊 Evaluation](#-evaluation)
-- [📁 File Structure](#-file-structure)
 - [📝 Citation](#-citation)
 - [📄 License](#-license)
 - [🙏 Acknowledgments](#-acknowledgments)
@@ -58,7 +149,6 @@
 
 *SimpleMem achieves superior F1 score (43.24%) with minimal token cost (~550), occupying the ideal top-left position.*
 </div>
-
 
 **SimpleMem** is an efficient memory framework based on **semantic lossless compression** that addresses the fundamental challenge of **efficient long-term memory for LLM agents**. Unlike existing systems that either passively accumulate redundant context or rely on expensive iterative reasoning loops, SimpleMem maximizes **information density** and **token utilization** through a three-stage pipeline:
 
@@ -91,9 +181,11 @@ Infers search intent to dynamically determine retrieval scope and construct prec
 </tr>
 </table>
 
+<div align="center">
 <img src="fig/Fig_framework.png" alt="SimpleMem Framework" width="900"/>
 
 *The SimpleMem Architecture: (1) Semantic Structured Compression filters low-utility dialogue and converts informative windows into compact, context-independent memory units. (2) Online Semantic Synthesis consolidates related fragments during writing, maintaining a compact and coherent memory topology. (3) Intent-Aware Retrieval Planning infers search intent to adapt retrieval scope and query forms, enabling parallel multi-view retrieval and token-efficient context construction.*
+</div>
 
 ---
 
@@ -204,8 +296,6 @@ The system then executes **parallel multi-view retrieval** across semantic, lexi
 
 ## 🚀 Performance Highlights
 
-
-
 ### 📊 Benchmark Results (LoCoMo)
 
 <details>
@@ -231,13 +321,16 @@ The system then executes **parallel multi-view retrieval** across semantic, lexi
 ---
 
 ## 📦 Installation
+
 ### 📝 Notes for First-Time Users
 
 - Ensure you are using **Python 3.10 in your active environment**, not just installed globally.
 - An OpenAI-compatible API key must be configured **before running any memory construction or retrieval**, otherwise initialization may fail.
 - When using non-OpenAI providers (e.g., Qwen or Azure OpenAI), verify both the model name and `OPENAI_BASE_URL` in `config.py`.
 - For large dialogue datasets, enabling parallel processing can significantly reduce memory construction time.
+
 ### 📋 Requirements
+
 - 🐍 Python 3.10
 - 🔑 OpenAI-compatible API (OpenAI, Qwen, Azure OpenAI, etc.)
 
@@ -270,31 +363,16 @@ EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-0.6B"  # State-of-the-art retrieval
 ---
 
 ## ⚡ Quick Start
+
 ### 🧠 Understanding the Basic Workflow
 
-At a high level, SimpleMem works as a long-term memory system for LLM-based agents. 
-The workflow consists of three simple steps:
+At a high level, SimpleMem works as a long-term memory system for LLM-based agents. The workflow consists of three simple steps:
 
 1. **Store information** – Dialogues or facts are processed and converted into structured, atomic memories.
 2. **Index memory** – Stored memories are organized using semantic embeddings and structured metadata.
 3. **Retrieve relevant memory** – When a query is made, SimpleMem retrieves the most relevant stored information based on meaning rather than keywords.
 
 This design allows LLM agents to maintain context, recall past information efficiently, and avoid repeatedly processing redundant history.
-
-## ❓ Common Setup Issues & Troubleshooting
-
-If you encounter issues while setting up or running SimpleMem for the first time, check the following common cases:
-
-### 1️⃣ API Key Not Detected
-- Ensure your API key is correctly set in `config.py`
-- For OpenAI-compatible providers (Qwen, Azure, etc.), verify that `OPENAI_BASE_URL` is configured correctly
-- Restart your Python environment after updating the key
-
-### 2️⃣ Python Version Mismatch
-- SimpleMem requires **Python 3.10**
-- Check your version using:
-  ```bash
-  python --version
 
 ### 🎓 Basic Usage
 
@@ -334,6 +412,24 @@ system = SimpleMemSystem(
 ```
 
 > **💡 Pro Tip**: Parallel processing significantly reduces latency for batch operations!
+
+---
+
+## ❓ Common Setup Issues & Troubleshooting
+
+If you encounter issues while setting up or running SimpleMem for the first time, check the following common cases:
+
+### 1️⃣ API Key Not Detected
+- Ensure your API key is correctly set in `config.py`
+- For OpenAI-compatible providers (Qwen, Azure, etc.), verify that `OPENAI_BASE_URL` is configured correctly
+- Restart your Python environment after updating the key
+
+### 2️⃣ Python Version Mismatch
+- SimpleMem requires **Python 3.10**
+- Check your version using:
+  ```bash
+  python --version
+  ```
 
 ---
 
@@ -395,8 +491,6 @@ Use the exact configurations in `config.py`:
 - **⚙️ Efficient**: Qwen2.5-1.5B, Qwen2.5-3B
 - **🔍 Embedding**: Qwen3-Embedding-0.6B (1024-d)
 
-
-
 ---
 
 ## 📝 Citation
@@ -428,5 +522,3 @@ We would like to thank the following projects and teams:
 - 🔍 **Embedding Model**: [Qwen3-Embedding](https://github.com/QwenLM/Qwen) - State-of-the-art retrieval performance
 - 🗄️ **Vector Database**: [LanceDB](https://lancedb.com/) - High-performance columnar storage
 - 📊 **Benchmark**: [LoCoMo](https://github.com/snap-research/locomo) - Long-context memory evaluation framework
-
-</div>
