@@ -100,6 +100,7 @@
 
 ## 🔥 Novità
 
+- **[02/09/2026]** 🚀 **Memoria Cross-Session disponibile - 64% più performante di Claude-Mem!** SimpleMem ora supporta **memoria persistente tra le conversazioni**. Nel benchmark LoCoMo, SimpleMem ottiene un **miglioramento del 64%** rispetto a Claude-Mem. I tuoi agenti ora possono ricordare automaticamente contesto, decisioni e apprendimenti dalle sessioni precedenti. [Documentazione Cross-Session →](../../cross/README.md)
 - **[01/20/2026]** **SimpleMem è ora disponibile su PyPI!** 📦 Installa direttamente con `pip install simplemem`. [Guida all'uso del pacchetto →](../PACKAGE_USAGE.md)
 - **[01/18/2026]** **SimpleMem ora supporta Claude Skills!** 🚀
 - **[01/14/2026]** **Il server MCP di SimpleMem è LIVE e Open Source!** 🎉 Servizio di memoria cloud su [mcp.simplemem.cloud](https://mcp.simplemem.cloud). [Documentazione MCP →](../../MCP/README.md)

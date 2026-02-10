@@ -108,7 +108,7 @@
 
 <br/>
 
-[Overview](#-overview) • [Quick Start](#-quick-start) • [MCP Server](#-mcp-server) • [Evaluation](#-evaluation) • [Citation](#-citation)
+[Overview](#-overview) • [Quick Start](#-quick-start) • [Cross-Session Memory](#-cross-session-memory) • [MCP Server](#-mcp-server) • [Evaluation](#-evaluation) • [Citation](#-citation)
 
 </div>
 
@@ -118,6 +118,7 @@
 
 ## 🔥 News
 
+- **[02/09/2026]** 🚀 **Cross-Session Memory is Here — Outperforming Claude-Mem by 64%!** SimpleMem now supports **persistent memory across conversations**. On the LoCoMo benchmark, SimpleMem achieves a **64% performance boost** over Claude-Mem. Your agents can now recall context, decisions, and learnings from previous sessions automatically. [View Cross-Session Documentation →](cross/README.md)
 - **[01/20/2026]** **SimpleMem is now available on PyPI!** 📦 Install directly via `pip install simplemem`. [View Package Usage Guide →](docs/PACKAGE_USAGE.md)
 - **[01/19/2026]** **Added Local Memory Storage for SimpleMem Skill!** 💾 SimpleMem Skill now supports local memory storage within Claude Skills.
 - **[01/18/2026]** **SimpleMem now supports Claude Skills!** 🚀 Use SimpleMem in claude.ai for long-term memory across conversations. Register at [mcp.simplemem.cloud](https://mcp.simplemem.cloud), configure your token, and import the skill!
@@ -134,6 +135,7 @@
 - [🚀 Performance Highlights](#-performance-highlights)
 - [📦 Installation](#-installation)
 - [⚡ Quick Start](#-quick-start)
+- [🧠 Cross-Session Memory](#-cross-session-memory)
 - [🔌 MCP Server](#-mcp-server)
 - [📊 Evaluation](#-evaluation)
 - [📝 Citation](#-citation)
@@ -298,6 +300,16 @@ The system then executes **parallel multi-view retrieval** across semantic, lexi
 
 ### 📊 Benchmark Results (LoCoMo)
 
+<details open>
+<summary><b>🏆 Cross-Session Memory Comparison</b></summary>
+
+| System | LoCoMo Score | vs SimpleMem |
+|:-------|:------------:|:------------:|
+| **SimpleMem** | **48** | — |
+| Claude-Mem | 29.3 | **+64%** |
+
+</details>
+
 <details>
 <summary><b>🔬 High-Capability Models (GPT-4.1-mini)</b></summary>
 
@@ -430,6 +442,96 @@ If you encounter issues while setting up or running SimpleMem for the first time
   ```bash
   python --version
   ```
+
+---
+
+## 🧠 Cross-Session Memory
+
+**SimpleMem-Cross** extends SimpleMem with persistent cross-conversation memory capabilities. Agents can recall context, decisions, and observations from previous sessions — enabling continuity across conversations without manual context re-injection.
+
+### Key Features
+
+| Feature | Description |
+|---------|-------------|
+| **Session Lifecycle** | Full session management with start/record/stop/end lifecycle |
+| **Automatic Context Injection** | Token-budgeted context from previous sessions injected at session start |
+| **Event Collection** | Record messages, tool uses, file changes with automatic redaction |
+| **Observation Extraction** | Heuristic extraction of decisions, discoveries, and learnings |
+| **Provenance Tracking** | Every memory entry links back to source evidence |
+| **Consolidation** | Decay, merge, and prune old memories to maintain quality |
+
+### Quick Example
+
+```python
+from cross.orchestrator import create_orchestrator
+
+async def main():
+    orch = create_orchestrator(project="my-project")
+
+    # Start session — previous context is injected automatically
+    result = await orch.start_session(
+        content_session_id="session-001",
+        user_prompt="Continue building the REST API",
+    )
+    print(result["context"])  # Relevant context from previous sessions
+
+    # Record events during the session
+    await orch.record_message(result["memory_session_id"], "User asked about JWT")
+    await orch.record_tool_use(
+        result["memory_session_id"],
+        tool_name="read_file",
+        tool_input="auth/jwt.py",
+        tool_output="class JWTHandler: ...",
+    )
+
+    # Finalize — extracts observations, generates summary, stores memories
+    report = await orch.stop_session(result["memory_session_id"])
+    print(f"Stored {report.entries_stored} memory entries")
+
+    await orch.end_session(result["memory_session_id"])
+    orch.close()
+```
+
+### Architecture
+
+```
+Agent Frameworks (Claude Code / Cursor / custom)
+                    |
+     +--------------+--------------+
+     |                             |
+Hook/Lifecycle Adapter      HTTP/MCP API (FastAPI)
+     |                             |
+     +--------------+--------------+
+                    |
+           CrossMemOrchestrator
+                    |
+  +-----------------+------------------+
+  |                 |                  |
+Session Manager  Context Injector  Consolidation
+(SQLite)         (budgeted bundle) (decay/merge/prune)
+  |                 |                  |
+  +---------+-------+                  |
+            |                          |
+   Cross-Session Vector Store (LanceDB) <--+
+```
+
+### Module Reference
+
+| Module | Description |
+|--------|-------------|
+| `cross/types.py` | Pydantic models, enums, records |
+| `cross/storage_sqlite.py` | SQLite backend for sessions, events, observations |
+| `cross/storage_lancedb.py` | LanceDB vector store with provenance |
+| `cross/hooks.py` | Lifecycle hooks (SessionStart/ToolUse/End) |
+| `cross/collectors.py` | Event collection with 3-tier redaction |
+| `cross/session_manager.py` | Full session lifecycle orchestration |
+| `cross/context_injector.py` | Token-budgeted context builder |
+| `cross/orchestrator.py` | Top-level facade and factory |
+| `cross/api_http.py` | FastAPI REST endpoints |
+| `cross/api_mcp.py` | MCP tool definitions |
+| `cross/consolidation.py` | Memory maintenance worker |
+
+> 📖 For detailed API documentation, see [Cross-Session README](cross/README.md)
 
 ---
 

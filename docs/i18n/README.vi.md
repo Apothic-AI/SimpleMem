@@ -100,6 +100,7 @@
 
 ## 🔥 Tin Mới
 
+- **[02/09/2026]** 🚀 **Bộ nhớ xuyên phiên khả dụng - Vượt trội hơn Claude-Mem 64%!** SimpleMem hiện hỗ trợ **bộ nhớ liên tục qua các cuộc hội thoại**. Trong benchmark LoCoMo, SimpleMem đạt **cải thiện 64%** so với Claude-Mem. Các agent của bạn giờ có thể tự động nhớ lại ngữ cảnh, quyết định và kiến thức từ các phiên trước. [Tài liệu Cross-Session →](../../cross/README.md)
 - **[01/20/2026]** **SimpleMem đã có trên PyPI!** 📦 Cài đặt trực tiếp với `pip install simplemem`. [Xem Hướng Dẫn Sử Dụng →](../PACKAGE_USAGE.md)
 - **[01/18/2026]** **SimpleMem hỗ trợ Claude Skills!** 🚀
 - **[01/14/2026]** **Máy chủ MCP SimpleMem đã hoạt động và mã nguồn mở!** 🎉 Dịch vụ bộ nhớ đám mây tại [mcp.simplemem.cloud](https://mcp.simplemem.cloud). [Tài liệu MCP →](../../MCP/README.md)

@@ -118,6 +118,7 @@
 
 ## 🔥 最新情報
 
+- **[02/09/2026]** 🚀 **クロスセッションメモリ機能リリース - Claude-Memを64%上回る性能！** SimpleMem は**会話をまたいだ永続メモリ**をサポートしました。LoCoMo ベンチマークで、Claude-Mem に対して **64% の性能向上**を達成。エージェントは過去のセッションからコンテキスト、決定、学習内容を自動的に呼び出せます。[クロスセッションメモリのドキュメントを見る →](../../cross/README.md)
 - **[01/20/2026]** **SimpleMem が PyPI に公開されました！** 📦 `pip install simplemem` で直接インストールできます。[パッケージ使用ガイドを見る →](../PACKAGE_USAGE.md)
 - **[01/19/2026]** **SimpleMem Skill にローカルメモリストレージを追加！** 💾 Claude Skills 内でのローカルメモリ保存・管理に対応しました。
 - **[01/18/2026]** **SimpleMem が Claude Skills に対応！** 🚀 claude.ai で会話間の長期記憶を実現。[mcp.simplemem.cloud](https://mcp.simplemem.cloud) で登録し、トークンを設定してスキルをインポートしてください！

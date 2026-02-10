@@ -100,6 +100,7 @@
 
 ## 🔥 Haberler
 
+- **[02/09/2026]** 🚀 **Çapraz Oturum Belleği kullanıma sunuldu - Claude-Mem'den %64 daha iyi performans!** SimpleMem artık **konuşmalar arası kalıcı bellek** destekliyor. LoCoMo karşılaştırmasında SimpleMem, Claude-Mem'e göre **%64 performans artışı** sağlıyor. Ajanlarınız artık önceki oturumlardan bağlam, kararlar ve öğrenmeleri otomatik olarak hatırlayabiliyor. [Cross-Session Dokümantasyonu →](../../cross/README.md)
 - **[01/20/2026]** **SimpleMem artık PyPI'da!** 📦 `pip install simplemem` ile doğrudan kurun. [Paket Kullanım Kılavuzu →](../PACKAGE_USAGE.md)
 - **[01/18/2026]** **SimpleMem artık Claude Skills'i destekliyor!** 🚀
 - **[01/14/2026]** **SimpleMem MCP Sunucusu CANLI ve Açık Kaynak!** 🎉 [mcp.simplemem.cloud](https://mcp.simplemem.cloud) adresinde bulut bellek hizmeti. [MCP Dokümantasyonu →](../../MCP/README.md)

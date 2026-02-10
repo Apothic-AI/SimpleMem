@@ -118,6 +118,7 @@
 
 ## 🔥 最新动态
 
+- **[02/09/2026]** 🚀 **跨对话记忆功能上线 - 性能超越 Claude-Mem 64%！** SimpleMem 现已支持**跨对话的持久化记忆**。在 LoCoMo 基准测试中，SimpleMem 相比 Claude-Mem 实现了 **64% 的性能提升**。您的 Agent 现在可以自动回忆之前对话中的上下文、决策和学习成果。[查看跨对话记忆文档 →](../../cross/README.md)
 - **[01/20/2026]** **SimpleMem 已上线 PyPI！** 📦 可直接通过 `pip install simplemem` 安装。[查看包使用指南 →](../PACKAGE_USAGE.md)
 - **[01/19/2026]** **SimpleMem Skill 新增本地记忆存储功能！** 💾 现已支持在 Claude Skills 中进行本地记忆存储与管理。
 - **[01/18/2026]** **SimpleMem 现已支持 Claude Skills！** 🚀 在 claude.ai 中使用 SimpleMem 实现跨会话长期记忆。前往 [mcp.simplemem.cloud](https://mcp.simplemem.cloud) 注册，配置令牌后导入技能即可使用！
