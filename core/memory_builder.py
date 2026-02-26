@@ -7,7 +7,7 @@ Implements:
 - Sliding window processing for dialogue segmentation
 - Generates compact memory units with resolved coreferences and absolute timestamps
 """
-from typing import List, Optional
+from typing import Any, List, Optional
 from datetime import datetime
 from models.memory_entry import MemoryEntry, Dialogue
 from utils.llm_client import LLMClient
