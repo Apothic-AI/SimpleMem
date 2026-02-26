@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "simplemem"
+version = "0.1.0"
+description = "SimpleMem local editable package"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "openai>=1.0.0",
+  "numpy>=1.24.0",
+  "pyarrow>=14.0.0",
+  "lancedb>=0.6.0",
+  "sentence-transformers>=3.0.0",
+  "dateparser>=1.2.2",
+]
+
+[project.optional-dependencies]
+gpu = []
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["simplemem*", "core*", "database*", "models*", "utils*"]
