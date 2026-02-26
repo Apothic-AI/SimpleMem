@@ -185,6 +185,7 @@ class MemoryBuilder:
 
         # Build prompt
         prompt = self._build_extraction_prompt(dialogue_text)
+        fallback_timestamp = self._resolve_window_timestamp(dialogues)
 
         # Call LLM
         messages = [
@@ -224,7 +225,7 @@ class MemoryBuilder:
                         entry_id=str(uuid.uuid4()),
                         lossless_restatement=item.get("lossless_restatement", ""),
                         keywords=item.get("keywords", []),
-                        timestamp=item.get("timestamp"),
+                        timestamp=item.get("timestamp") or fallback_timestamp,
                         location=item.get("location"),
                         persons=item.get("persons", []),
                         entities=item.get("entities", []),
@@ -241,6 +242,13 @@ class MemoryBuilder:
                     return []
 
         return []
+
+    def _resolve_window_timestamp(self, dialogues: List[Dialogue]) -> str:
+        """Return a stable timestamp anchor for extracted entries in a window."""
+        for dialogue in reversed(dialogues):
+            if dialogue.timestamp:
+                return dialogue.timestamp
+        return datetime.utcnow().isoformat()
 
     def _format_dialogues(self, dialogues: List[Dialogue]) -> str:
         """Format dialogues into readable text"""

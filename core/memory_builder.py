@@ -8,6 +8,7 @@ Implements:
 - Generates compact memory units with resolved coreferences and absolute timestamps
 """
 from typing import List, Optional
+from datetime import datetime
 from models.memory_entry import MemoryEntry, Dialogue
 from utils.llm_client import LLMClient
 from database.vector_store import VectorStore
@@ -16,6 +17,7 @@ import json
 import asyncio
 import concurrent.futures
 from functools import partial
+import time
 
 
 class MemoryBuilder:
@@ -54,6 +56,12 @@ class MemoryBuilder:
 
         # Previous window entries (for context)
         self.previous_entries: List[MemoryEntry] = []
+        self.last_timing = {}
+        self._last_generation_timing = {}
+
+    @staticmethod
+    def _elapsed_ms(started_at: float) -> float:
+        return round((time.perf_counter() - started_at) * 1000, 3)
 
     def add_dialogue(self, dialogue: Dialogue, auto_process: bool = True):
         """
@@ -154,18 +162,42 @@ class MemoryBuilder:
 
         print(f"Generated {len(entries)} memory entries")
 
-    def process_remaining(self):
+    def process_remaining(self) -> int:
         """
         Process remaining dialogues (fallback method, normally handled in parallel)
         """
+        started_at = time.perf_counter()
         if self.dialogue_buffer:
+            dialogue_count = len(self.dialogue_buffer)
             print(f"\nProcessing remaining dialogues: {len(self.dialogue_buffer)} (fallback mode)")
+            generate_started = time.perf_counter()
             entries = self._generate_memory_entries(self.dialogue_buffer)
+            generate_ms = self._elapsed_ms(generate_started)
+            add_ms = 0.0
             if entries:
+                add_started = time.perf_counter()
                 self.vector_store.add_entries(entries)
+                add_ms = self._elapsed_ms(add_started)
                 self.processed_count += len(self.dialogue_buffer)
             self.dialogue_buffer = []
             print(f"Generated {len(entries)} memory entries")
+            self.last_timing = {
+                "phase": "process_remaining",
+                "dialogue_count": dialogue_count,
+                "entries_generated": len(entries),
+                "generate_entries_ms": generate_ms,
+                "vector_store_add_ms": add_ms,
+                "generation": dict(self._last_generation_timing),
+                "duration_ms": self._elapsed_ms(started_at),
+            }
+            return len(entries)
+        self.last_timing = {
+            "phase": "process_remaining",
+            "dialogue_count": 0,
+            "entries_generated": 0,
+            "duration_ms": self._elapsed_ms(started_at),
+        }
+        return 0
 
     def _generate_memory_entries(self, dialogues: List[Dialogue]) -> List[MemoryEntry]:
         """
@@ -173,8 +205,15 @@ class MemoryBuilder:
         Φ_gate(W) → {m_k}, generates compact memory units from dialogue window
         """
         # Build dialogue text
+        started_at = time.perf_counter()
+        timing = {
+            "phase": "generate_memory_entries",
+            "dialogue_count": len(dialogues),
+            "attempts": [],
+        }
         dialogue_text = "\n".join([str(d) for d in dialogues])
         dialogue_ids = [d.dialogue_id for d in dialogues]
+        fallback_timestamp = self._resolve_window_timestamp(dialogues)
 
         # Build context
         context = ""
@@ -184,7 +223,17 @@ class MemoryBuilder:
                 context += f"- {entry.lossless_restatement}\n"
 
         # Build prompt
-        prompt = self._build_extraction_prompt(dialogue_text, dialogue_ids, context)
+        use_json_object_mode = bool(
+            hasattr(config, 'USE_JSON_FORMAT') and config.USE_JSON_FORMAT
+        )
+        prompt_started = time.perf_counter()
+        prompt = self._build_extraction_prompt(
+            dialogue_text,
+            dialogue_ids,
+            context,
+            json_object_mode=use_json_object_mode,
+        )
+        timing["prompt_build_ms"] = self._elapsed_ms(prompt_started)
 
         # Call LLM
         messages = [
@@ -200,41 +249,172 @@ class MemoryBuilder:
 
         # Retry up to 3 times if parsing fails
         max_retries = 3
+        llm_total_ms = 0.0
+        parse_total_ms = 0.0
         for attempt in range(max_retries):
+            attempt_timing = {"attempt": attempt + 1}
             try:
                 # Use JSON format if configured
                 response_format = None
-                if hasattr(config, 'USE_JSON_FORMAT') and config.USE_JSON_FORMAT:
+                if use_json_object_mode:
                     response_format = {"type": "json_object"}
 
+                llm_started = time.perf_counter()
                 response = self.llm_client.chat_completion(
                     messages,
                     temperature=0.1,
                     response_format=response_format
                 )
+                llm_ms = self._elapsed_ms(llm_started)
+                llm_total_ms += llm_ms
+                attempt_timing["llm_ms"] = llm_ms
 
                 # Parse response
-                entries = self._parse_llm_response(response, dialogue_ids)
+                parse_started = time.perf_counter()
+                entries = self._parse_llm_response(
+                    response,
+                    dialogue_ids,
+                    fallback_timestamp=fallback_timestamp,
+                )
+                parse_ms = self._elapsed_ms(parse_started)
+                parse_total_ms += parse_ms
+                attempt_timing["parse_ms"] = parse_ms
+                attempt_timing["success"] = True
+                timing["attempts"].append(attempt_timing)
+                timing["attempt_count"] = len(timing["attempts"])
+                timing["llm_ms"] = round(llm_total_ms, 3)
+                timing["parse_ms"] = round(parse_total_ms, 3)
+                timing["success"] = True
+                timing["entries_generated"] = len(entries)
+                timing["duration_ms"] = self._elapsed_ms(started_at)
+                self._last_generation_timing = timing
                 return entries
 
             except Exception as e:
+                attempt_timing["success"] = False
+                attempt_timing["error"] = f"{type(e).__name__}: {e}"
+                timing["attempts"].append(attempt_timing)
                 if attempt < max_retries - 1:
                     print(f"Attempt {attempt + 1}/{max_retries} failed to parse LLM response: {e}")
                     print(f"Retrying...")
                 else:
                     print(f"All {max_retries} attempts failed to parse LLM response: {e}")
                     print(f"Raw response: {response[:500] if 'response' in locals() else 'No response'}")
+                    timing["attempt_count"] = len(timing["attempts"])
+                    timing["llm_ms"] = round(llm_total_ms, 3)
+                    timing["parse_ms"] = round(parse_total_ms, 3)
+                    timing["success"] = False
+                    timing["entries_generated"] = 0
+                    timing["duration_ms"] = self._elapsed_ms(started_at)
+                    self._last_generation_timing = timing
                     return []
 
     def _build_extraction_prompt(
         self,
         dialogue_text: str,
         dialogue_ids: List[int],
-        context: str
+        context: str,
+        json_object_mode: bool = False,
     ) -> str:
         """
         Build LLM extraction prompt
         """
+        output_instructions = (
+            "Return ONLY a JSON object with one key `entries`, where `entries` is the JSON array of memory entries."
+            if json_object_mode
+            else "Return ONLY the JSON array, no other explanations."
+        )
+
+        output_example_intro = (
+            "Return a JSON object containing the memory entry array in `entries`:"
+            if json_object_mode
+            else "Return a JSON array, each element is a memory entry:"
+        )
+
+        output_example_json = (
+            """```json
+{
+  "entries": [
+    {
+      "lossless_restatement": "Complete unambiguous restatement (must include all subjects, objects, time, location, etc.)",
+      "keywords": ["keyword1", "keyword2", ...],
+      "timestamp": "YYYY-MM-DDTHH:MM:SS or null",
+      "location": "location name or null",
+      "persons": ["name1", "name2", ...],
+      "entities": ["entity1", "entity2", ...],
+      "topic": "topic phrase"
+    },
+    ...
+  ]
+}
+```"""
+            if json_object_mode
+            else """```json
+[
+  {
+    "lossless_restatement": "Complete unambiguous restatement (must include all subjects, objects, time, location, etc.)",
+    "keywords": ["keyword1", "keyword2", ...],
+    "timestamp": "YYYY-MM-DDTHH:MM:SS or null",
+    "location": "location name or null",
+    "persons": ["name1", "name2", ...],
+    "entities": ["entity1", "entity2", ...],
+    "topic": "topic phrase"
+  },
+  ...
+]
+```"""
+        )
+
+        formatted_output_example = (
+            """```json
+{
+  "entries": [
+    {
+      "lossless_restatement": "Alice suggested at 2025-11-15T14:30:00 to meet with Bob at Starbucks on 2025-11-16T14:00:00 to discuss the new product.",
+      "keywords": ["Alice", "Bob", "Starbucks", "new product", "meeting"],
+      "timestamp": "2025-11-16T14:00:00",
+      "location": "Starbucks",
+      "persons": ["Alice", "Bob"],
+      "entities": ["new product"],
+      "topic": "Product discussion meeting arrangement"
+    },
+    {
+      "lossless_restatement": "Bob agreed to attend the meeting and committed to prepare relevant materials.",
+      "keywords": ["Bob", "prepare materials", "agree"],
+      "timestamp": null,
+      "location": null,
+      "persons": ["Bob"],
+      "entities": [],
+      "topic": "Meeting preparation confirmation"
+    }
+  ]
+}
+```"""
+            if json_object_mode
+            else """```json
+[
+  {
+    "lossless_restatement": "Alice suggested at 2025-11-15T14:30:00 to meet with Bob at Starbucks on 2025-11-16T14:00:00 to discuss the new product.",
+    "keywords": ["Alice", "Bob", "Starbucks", "new product", "meeting"],
+    "timestamp": "2025-11-16T14:00:00",
+    "location": "Starbucks",
+    "persons": ["Alice", "Bob"],
+    "entities": ["new product"],
+    "topic": "Product discussion meeting arrangement"
+  },
+  {
+    "lossless_restatement": "Bob agreed to attend the meeting and committed to prepare relevant materials.",
+    "keywords": ["Bob", "prepare materials", "agree"],
+    "timestamp": null,
+    "location": null,
+    "persons": ["Bob"],
+    "entities": [],
+    "topic": "Meeting preparation confirmation"
+  }
+]
+```"""
+        )
+
         return f"""
 Your task is to extract all valuable information from the following dialogues and convert them into structured memory entries.
 
@@ -256,22 +436,9 @@ Your task is to extract all valuable information from the following dialogues an
    - topic: The topic of this information
 
 [Output Format]
-Return a JSON array, each element is a memory entry:
+{output_example_intro}
 
-```json
-[
-  {{
-    "lossless_restatement": "Complete unambiguous restatement (must include all subjects, objects, time, location, etc.)",
-    "keywords": ["keyword1", "keyword2", ...],
-    "timestamp": "YYYY-MM-DDTHH:MM:SS or null",
-    "location": "location name or null",
-    "persons": ["name1", "name2", ...],
-    "entities": ["entity1", "entity2", ...],
-    "topic": "topic phrase"
-  }},
-  ...
-]
-```
+{output_example_json}
 
 [Example]
 Dialogues:
@@ -279,36 +446,16 @@ Dialogues:
 [2025-11-15T14:31:00] Bob: Okay, I'll prepare the materials
 
 Output:
-```json
-[
-  {{
-    "lossless_restatement": "Alice suggested at 2025-11-15T14:30:00 to meet with Bob at Starbucks on 2025-11-16T14:00:00 to discuss the new product.",
-    "keywords": ["Alice", "Bob", "Starbucks", "new product", "meeting"],
-    "timestamp": "2025-11-16T14:00:00",
-    "location": "Starbucks",
-    "persons": ["Alice", "Bob"],
-    "entities": ["new product"],
-    "topic": "Product discussion meeting arrangement"
-  }},
-  {{
-    "lossless_restatement": "Bob agreed to attend the meeting and committed to prepare relevant materials.",
-    "keywords": ["Bob", "prepare materials", "agree"],
-    "timestamp": null,
-    "location": null,
-    "persons": ["Bob"],
-    "entities": [],
-    "topic": "Meeting preparation confirmation"
-  }}
-]
-```
+{formatted_output_example}
 
-Now process the above dialogues. Return ONLY the JSON array, no other explanations.
+Now process the above dialogues. {output_instructions}
 """
 
     def _parse_llm_response(
         self,
         response: str,
-        dialogue_ids: List[int]
+        dialogue_ids: List[int],
+        fallback_timestamp: Optional[str] = None,
     ) -> List[MemoryEntry]:
         """
         Parse LLM response to MemoryEntry list
@@ -316,16 +463,37 @@ Now process the above dialogues. Return ONLY the JSON array, no other explanatio
         # Extract JSON
         data = self.llm_client.extract_json(response)
 
-        if not isinstance(data, list):
-            raise ValueError(f"Expected JSON array but got: {type(data)}")
+        extracted_entries: Any = None
+        if isinstance(data, list):
+            extracted_entries = data
+        elif isinstance(data, dict):
+            # JSON-object mode may wrap the array under a key.
+            for key in ("entries", "memory_entries", "memories", "items", "results", "data"):
+                value = data.get(key)
+                if isinstance(value, list):
+                    extracted_entries = value
+                    break
+            if extracted_entries is None and len(data) == 1:
+                only_value = next(iter(data.values()))
+                if isinstance(only_value, list):
+                    extracted_entries = only_value
+
+        if not isinstance(extracted_entries, list):
+            raise ValueError(
+                f"Expected JSON array or object containing array, got: {type(data)}"
+            )
 
         entries = []
-        for item in data:
+        for item in extracted_entries:
+            if not isinstance(item, dict):
+                raise ValueError(
+                    f"Expected memory entry objects inside array, got: {type(item)}"
+                )
             # Create MemoryEntry
             entry = MemoryEntry(
                 lossless_restatement=item["lossless_restatement"],
                 keywords=item.get("keywords", []),
-                timestamp=item.get("timestamp"),
+                timestamp=item.get("timestamp") or fallback_timestamp,
                 location=item.get("location"),
                 persons=item.get("persons", []),
                 entities=item.get("entities", []),
@@ -334,6 +502,13 @@ Now process the above dialogues. Return ONLY the JSON array, no other explanatio
             entries.append(entry)
 
         return entries
+
+    def _resolve_window_timestamp(self, dialogues: List[Dialogue]) -> str:
+        """Return a stable timestamp anchor for entries extracted from a window."""
+        for dialogue in reversed(dialogues):
+            if dialogue.timestamp:
+                return dialogue.timestamp
+        return datetime.utcnow().isoformat()
     
     def _process_windows_parallel(self, windows: List[List[Dialogue]]):
         """
@@ -382,6 +557,7 @@ Now process the above dialogues. Return ONLY the JSON array, no other explanatio
         
         # Build dialogue text
         dialogue_text = "\n".join([str(d) for d in window])
+        fallback_timestamp = self._resolve_window_timestamp(window)
         
         # Build context (shared across all workers - this is fine for parallel processing)
         context = ""
@@ -391,7 +567,15 @@ Now process the above dialogues. Return ONLY the JSON array, no other explanatio
                 context += f"- {entry.lossless_restatement}\n"
 
         # Build prompt
-        prompt = self._build_extraction_prompt(dialogue_text, dialogue_ids, context)
+        use_json_object_mode = bool(
+            hasattr(config, 'USE_JSON_FORMAT') and config.USE_JSON_FORMAT
+        )
+        prompt = self._build_extraction_prompt(
+            dialogue_text,
+            dialogue_ids,
+            context,
+            json_object_mode=use_json_object_mode,
+        )
 
         # Call LLM
         messages = [
@@ -411,7 +595,7 @@ Now process the above dialogues. Return ONLY the JSON array, no other explanatio
             try:
                 # Use JSON format if configured
                 response_format = None
-                if hasattr(config, 'USE_JSON_FORMAT') and config.USE_JSON_FORMAT:
+                if use_json_object_mode:
                     response_format = {"type": "json_object"}
 
                 response = self.llm_client.chat_completion(
@@ -421,7 +605,11 @@ Now process the above dialogues. Return ONLY the JSON array, no other explanatio
                 )
 
                 # Parse response
-                entries = self._parse_llm_response(response, dialogue_ids)
+                entries = self._parse_llm_response(
+                    response,
+                    dialogue_ids,
+                    fallback_timestamp=fallback_timestamp,
+                )
                 print(f"[Worker {window_num}] Generated {len(entries)} entries")
                 return entries
 
