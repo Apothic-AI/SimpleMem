@@ -15,14 +15,46 @@ class EmbeddingModel:
     def __init__(self, model_name: str = None, use_optimization: bool = True):
         self.model_name = model_name or config.EMBEDDING_MODEL
         self.use_optimization = use_optimization
+        self.embedding_base_url = getattr(config, "EMBEDDING_BASE_URL", None)
+        self.embedding_api_key = (
+            getattr(config, "EMBEDDING_API_KEY", None)
+            or getattr(config, "OPENAI_API_KEY", None)
+            or "dummy-key"
+        )
         
         print(f"Loading embedding model: {self.model_name}")
+
+        if self.embedding_base_url:
+            self._init_remote_openai_embedding()
+            return
         
         # Check if it's a Qwen3 model (through SentenceTransformers)
         if self.model_name.startswith("qwen3"):
             self._init_qwen3_sentence_transformer()
         else:
             self._init_standard_sentence_transformer()
+
+    def _init_remote_openai_embedding(self):
+        """Initialize remote embedding endpoint."""
+        import httpx
+        base = str(self.embedding_base_url).rstrip("/")
+        urls = [f"{base}/embeddings", f"{base}/embedding"]
+        if base.endswith("/v1"):
+            base_no_v1 = base[:-3].rstrip("/")
+            if base_no_v1:
+                urls.extend([f"{base_no_v1}/embeddings", f"{base_no_v1}/embedding"])
+        else:
+            urls.append(f"{base}/v1/embeddings")
+        deduped = []
+        for url in urls:
+            if url not in deduped:
+                deduped.append(url)
+        self.model = httpx.Client(timeout=30.0)
+        self.remote_urls = deduped
+        self.dimension = int(getattr(config, "EMBEDDING_DIMENSION", 1024))
+        self.model_type = "openai_compatible_remote"
+        self.supports_query_prompt = False
+        print(f"Using remote embedding endpoint: {self.embedding_base_url}")
 
     def _init_qwen3_sentence_transformer(self):
         """Initialize Qwen3 model using SentenceTransformers"""
@@ -149,9 +181,70 @@ class EmbeddingModel:
     
     def _encode_standard(self, texts: List[str]) -> np.ndarray:
         """Encode texts using standard method"""
+        if self.model_type == "openai_compatible_remote":
+            return self._encode_remote(texts)
         embeddings = self.model.encode(
             texts, 
             show_progress_bar=False,
             normalize_embeddings=True
         )
         return embeddings
+
+    def _encode_remote(self, texts: List[str]) -> np.ndarray:
+        """Encode texts using remote embeddings endpoint."""
+        headers = {"Content-Type": "application/json"}
+        if self.embedding_api_key:
+            headers["Authorization"] = f"Bearer {self.embedding_api_key}"
+
+        def _extract(payload: Any) -> List[float]:
+            if isinstance(payload, dict):
+                data = payload.get("data")
+                if isinstance(data, list) and data:
+                    emb = data[0].get("embedding")
+                    if isinstance(emb, list):
+                        if emb and isinstance(emb[0], list):
+                            emb = emb[0]
+                        return [float(x) for x in emb]
+                emb = payload.get("embedding")
+                if isinstance(emb, list):
+                    if emb and isinstance(emb[0], list):
+                        emb = emb[0]
+                    return [float(x) for x in emb]
+            if isinstance(payload, list) and payload:
+                first = payload[0]
+                if isinstance(first, dict) and isinstance(first.get("embedding"), list):
+                    emb = first["embedding"]
+                    if emb and isinstance(emb[0], list):
+                        emb = emb[0]
+                    return [float(x) for x in emb]
+            raise ValueError("Unexpected embedding response shape")
+
+        vectors = []
+        for text in texts:
+            last_exc = None
+            for url in self.remote_urls:
+                try:
+                    response = self.model.post(
+                        url,
+                        headers=headers,
+                        json={"model": self.model_name, "input": text},
+                    )
+                    response.raise_for_status()
+                    vectors.append(_extract(response.json()))
+                    last_exc = None
+                    break
+                except Exception as exc:
+                    last_exc = exc
+            if last_exc is not None:
+                raise last_exc
+
+        array = np.asarray(vectors, dtype=np.float32)
+        if array.ndim == 1:
+            array = array.reshape(1, -1)
+        if array.size == 0:
+            raise ValueError("Embedding API returned empty vectors")
+        norms = np.linalg.norm(array, axis=1, keepdims=True)
+        norms = np.where(norms == 0.0, 1.0, norms)
+        array = array / norms
+        self.dimension = int(array.shape[1])
+        return array

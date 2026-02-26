@@ -27,6 +27,8 @@ class SimpleMemSystem:
         api_key: Optional[str] = None,
         model: Optional[str] = None,
         base_url: Optional[str] = None,
+        embedding_base_url: Optional[str] = None,
+        embedding_api_key: Optional[str] = None,
         db_path: Optional[str] = None,
         table_name: Optional[str] = None,
         clear_db: bool = False,
@@ -47,6 +49,8 @@ class SimpleMemSystem:
         - api_key: OpenAI API key
         - model: LLM model name
         - base_url: Custom OpenAI base URL (for compatible APIs)
+        - embedding_base_url: OpenAI-compatible embeddings endpoint (optional)
+        - embedding_api_key: API key for embedding endpoint (optional)
         - db_path: Database path
         - table_name: Memory table name (for parallel processing)
         - clear_db: Whether to clear existing database
@@ -72,6 +76,13 @@ class SimpleMemSystem:
             enable_thinking=enable_thinking,
             use_streaming=use_streaming
         )
+
+        # Optional embedding endpoint overrides for remote embedding providers.
+        if embedding_base_url is not None:
+            config.EMBEDDING_BASE_URL = embedding_base_url
+        if embedding_api_key is not None:
+            config.EMBEDDING_API_KEY = embedding_api_key
+
         self.embedding_model = EmbeddingModel()
         self.vector_store = VectorStore(
             db_path=db_path,
@@ -140,7 +151,13 @@ class SimpleMemSystem:
         Finalize dialogue input, process any remaining buffer (safety check)
         Note: In parallel mode, remaining dialogues are already processed
         """
-        self.memory_builder.process_remaining()
+        pending_dialogues = len(self.memory_builder.dialogue_buffer)
+        generated_entries = self.memory_builder.process_remaining()
+        return {
+            "pending_dialogues": pending_dialogues,
+            "generated_entries": generated_entries,
+            "timing": getattr(self.memory_builder, "last_timing", None),
+        }
 
     def ask(self, question: str) -> str:
         """
