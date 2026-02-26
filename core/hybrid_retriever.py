@@ -15,6 +15,7 @@ import re
 from datetime import datetime, timedelta
 import dateparser
 import concurrent.futures
+import time
 
 
 class HybridRetriever:
@@ -54,6 +55,12 @@ class HybridRetriever:
         self.max_reflection_rounds = max_reflection_rounds if max_reflection_rounds is not None else getattr(config, 'MAX_REFLECTION_ROUNDS', 2)
         self.enable_parallel_retrieval = enable_parallel_retrieval if enable_parallel_retrieval is not None else getattr(config, 'ENABLE_PARALLEL_RETRIEVAL', True)
         self.max_retrieval_workers = max_retrieval_workers if max_retrieval_workers is not None else getattr(config, 'MAX_RETRIEVAL_WORKERS', 3)
+        self.last_timing: Dict[str, Any] = {}
+        self._last_reflection_timing: Dict[str, Any] = {}
+
+    @staticmethod
+    def _elapsed_ms(started_at: float) -> float:
+        return round((time.perf_counter() - started_at) * 1000, 3)
 
     def retrieve(self, query: str, enable_reflection: Optional[bool] = None) -> List[MemoryEntry]:
         """
@@ -66,13 +73,33 @@ class HybridRetriever:
 
         Returns: List of relevant MemoryEntry
         """
-        if self.enable_planning:
-            return self._retrieve_with_planning(query, enable_reflection)
-        else:
-            # Fallback to simple semantic search
-            return self._semantic_search(query)
-    
-    def _retrieve_with_planning(self, query: str, enable_reflection: Optional[bool] = None) -> List[MemoryEntry]:
+        timing: Dict[str, Any] = {
+            "mode": "planning" if self.enable_planning else "semantic_only",
+            "planning_enabled": bool(self.enable_planning),
+            "parallel_retrieval_enabled": bool(self.enable_parallel_retrieval),
+            "reflection_default_enabled": bool(self.enable_reflection),
+        }
+        started_at = time.perf_counter()
+
+        try:
+            if self.enable_planning:
+                results = self._retrieve_with_planning(query, enable_reflection, timing=timing)
+            else:
+                semantic_started = time.perf_counter()
+                results = self._semantic_search(query)
+                timing["semantic_search_ms"] = self._elapsed_ms(semantic_started)
+                timing["results_count"] = len(results)
+            return results
+        finally:
+            timing["total_ms"] = self._elapsed_ms(started_at)
+            self.last_timing = timing
+
+    def _retrieve_with_planning(
+        self,
+        query: str,
+        enable_reflection: Optional[bool] = None,
+        timing: Optional[Dict[str, Any]] = None,
+    ) -> List[MemoryEntry]:
         """
         Execute retrieval with intelligent planning process
         
@@ -80,49 +107,83 @@ class HybridRetriever:
         - query: Search query  
         - enable_reflection: Override reflection setting for this query
         """
+        timing_data: Dict[str, Any] = timing if timing is not None else {}
+        timing_data["query_length"] = len(query)
         print(f"\n[Planning] Analyzing information requirements for: {query}")
         
         # Step 1: Intelligent analysis of what information is needed
+        planning_started = time.perf_counter()
         information_plan = self._analyze_information_requirements(query)
+        timing_data["planning_analysis_ms"] = self._elapsed_ms(planning_started)
+        timing_data["required_info_count"] = len(information_plan.get("required_info", []))
         print(f"[Planning] Identified {len(information_plan['required_info'])} information requirements")
         
         # Step 2: Generate minimal necessary queries based on the plan
+        query_gen_started = time.perf_counter()
         search_queries = self._generate_targeted_queries(query, information_plan)
+        timing_data["targeted_query_generation_ms"] = self._elapsed_ms(query_gen_started)
+        timing_data["search_query_count"] = len(search_queries)
         print(f"[Planning] Generated {len(search_queries)} targeted queries")
         
         # Step 3: Execute searches for all queries (parallel or sequential)
+        semantic_started = time.perf_counter()
         if self.enable_parallel_retrieval and len(search_queries) > 1:
+            timing_data["semantic_search_mode"] = "parallel"
             all_results = self._execute_parallel_searches(search_queries)
         else:
+            timing_data["semantic_search_mode"] = "sequential"
+            per_query_ms: List[float] = []
             all_results = []
             for i, search_query in enumerate(search_queries, 1):
                 print(f"[Search {i}] {search_query}")
+                query_started = time.perf_counter()
                 results = self._semantic_search(search_query)
                 all_results.extend(results)
+                per_query_ms.append(self._elapsed_ms(query_started))
+            timing_data["semantic_query_ms"] = per_query_ms
+        timing_data["semantic_search_ms"] = self._elapsed_ms(semantic_started)
+        timing_data["semantic_results_count"] = len(all_results)
 
         # Step 3.5: Execute keyword and structured searches (hybrid retrieval)
+        query_analysis_started = time.perf_counter()
         query_analysis = self._analyze_query(query)
+        timing_data["query_analysis_ms"] = self._elapsed_ms(query_analysis_started)
 
         # Keyword search (Lexical Layer)
+        keyword_started = time.perf_counter()
         keyword_results = self._keyword_search(query, query_analysis)
+        timing_data["keyword_search_ms"] = self._elapsed_ms(keyword_started)
+        timing_data["keyword_results_count"] = len(keyword_results)
         print(f"[Keyword Search] Found {len(keyword_results)} results")
         all_results.extend(keyword_results)
 
         # Structured search (Symbolic Layer)
+        structured_started = time.perf_counter()
         structured_results = self._structured_search(query_analysis)
+        timing_data["structured_search_ms"] = self._elapsed_ms(structured_started)
+        timing_data["structured_results_count"] = len(structured_results)
         print(f"[Structured Search] Found {len(structured_results)} results")
         all_results.extend(structured_results)
 
         # Step 4: Merge and deduplicate results
+        merge_started = time.perf_counter()
         merged_results = self._merge_and_deduplicate_entries(all_results)
+        timing_data["merge_deduplicate_ms"] = self._elapsed_ms(merge_started)
+        timing_data["merged_results_count"] = len(merged_results)
         print(f"[Planning] Found {len(merged_results)} unique results (semantic + keyword + structured)")
         
         # Step 5: Optional reflection-based additional retrieval
         # Use override parameter if provided, otherwise use global setting
         should_use_reflection = enable_reflection if enable_reflection is not None else self.enable_reflection
+        timing_data["reflection_enabled"] = bool(should_use_reflection)
         
         if should_use_reflection:
+            reflection_started = time.perf_counter()
             merged_results = self._retrieve_with_intelligent_reflection(query, merged_results, information_plan)
+            timing_data["reflection_ms"] = self._elapsed_ms(reflection_started)
+            timing_data["reflection"] = dict(self._last_reflection_timing)
+        else:
+            self._last_reflection_timing = {}
         
         return merged_results
     
@@ -796,46 +857,82 @@ Return ONLY the JSON, no other text.
         Execute intelligent reflection-based additional retrieval
         """
         current_results = initial_results
+        reflection_timing: Dict[str, Any] = {
+            "max_rounds": self.max_reflection_rounds,
+            "initial_results_count": len(initial_results),
+            "rounds": [],
+        }
+        started_at = time.perf_counter()
         
         for round_num in range(self.max_reflection_rounds):
+            round_started = time.perf_counter()
+            round_timing: Dict[str, Any] = {"round": round_num + 1}
             print(f"\n[Intelligent Reflection Round {round_num + 1}] Analyzing information completeness...")
             
             # Intelligent analysis of information completeness
             if not current_results:
                 completeness_status = "no_results"
+                round_timing["analysis_ms"] = 0.0
             else:
+                analysis_started = time.perf_counter()
                 completeness_status = self._analyze_information_completeness(query, current_results, information_plan)
+                round_timing["analysis_ms"] = self._elapsed_ms(analysis_started)
             
+            round_timing["status"] = completeness_status
             if completeness_status == "complete":
                 print(f"[Intelligent Reflection Round {round_num + 1}] Information is complete")
+                round_timing["results_after_round"] = len(current_results)
+                round_timing["round_total_ms"] = self._elapsed_ms(round_started)
+                reflection_timing["rounds"].append(round_timing)
                 break
             elif completeness_status == "incomplete":
                 print(f"[Intelligent Reflection Round {round_num + 1}] Information is incomplete, generating targeted additional queries...")
                 
                 # Generate targeted additional queries based on what's missing
+                query_gen_started = time.perf_counter()
                 additional_queries = self._generate_missing_info_queries(query, current_results, information_plan)
+                round_timing["query_generation_ms"] = self._elapsed_ms(query_gen_started)
+                round_timing["additional_query_count"] = len(additional_queries)
                 print(f"[Intelligent Reflection Round {round_num + 1}] Generated {len(additional_queries)} targeted queries")
                 
                 # Execute additional searches
+                search_started = time.perf_counter()
                 if self.enable_parallel_retrieval and len(additional_queries) > 1:
+                    round_timing["search_mode"] = "parallel"
                     print(f"[Intelligent Reflection Round {round_num + 1}] Executing {len(additional_queries)} queries in parallel")
                     additional_results = self._execute_parallel_additional_searches(additional_queries, round_num + 1)
                 else:
+                    round_timing["search_mode"] = "sequential"
                     additional_results = []
                     for i, add_query in enumerate(additional_queries, 1):
                         print(f"[Additional Search {i}] {add_query}")
                         results = self._semantic_search(add_query)
                         additional_results.extend(results)
+                round_timing["search_ms"] = self._elapsed_ms(search_started)
+                round_timing["additional_results_count"] = len(additional_results)
                 
                 # Merge with existing results
+                merge_started = time.perf_counter()
                 all_results = current_results + additional_results
                 current_results = self._merge_and_deduplicate_entries(all_results)
+                round_timing["merge_ms"] = self._elapsed_ms(merge_started)
+                round_timing["results_after_round"] = len(current_results)
                 print(f"[Intelligent Reflection Round {round_num + 1}] Total results: {len(current_results)}")
                 
             else:  # "no_results"
                 print(f"[Intelligent Reflection Round {round_num + 1}] No results found, cannot continue reflection")
+                round_timing["results_after_round"] = len(current_results)
+                round_timing["round_total_ms"] = self._elapsed_ms(round_started)
+                reflection_timing["rounds"].append(round_timing)
                 break
+
+            round_timing["round_total_ms"] = self._elapsed_ms(round_started)
+            reflection_timing["rounds"].append(round_timing)
         
+        reflection_timing["rounds_executed"] = len(reflection_timing["rounds"])
+        reflection_timing["final_results_count"] = len(current_results)
+        reflection_timing["total_ms"] = self._elapsed_ms(started_at)
+        self._last_reflection_timing = reflection_timing
         return current_results
     
     def _analyze_information_completeness(self, query: str, current_results: List[MemoryEntry], information_plan: Dict[str, Any]) -> str:
